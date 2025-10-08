@@ -9,8 +9,7 @@ use App\Http\Middleware\CheckActiveCashSession;
 
 
 Route::get('/', function () {
-    return redirect()->route('filament.admin.auth.login');
-    
+    return (view('welcome'));    
 });
 
 Route::get('sales/{sale}/receipt', [ReceiptController::class, 'print'])->name('sales.receipt.print');
@@ -22,18 +21,12 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        //return view('dashboard');
-         return redirect()->route('pos.index');
+        return view('dashboard');
+         //return redirect()->route('pos.index');
     })->name('dashboard');
 });
 
-//Ruta pos
 Route::middleware(['auth', CheckPosAccess::class])->prefix('pos')->name('pos.')->group(function () {
-    Route::get('/open-cash-register', [PosController::class, 'showOpenCashRegisterForm'])->name('open_cash_register.form');
-    Route::post('/open-cash-register', [PosController::class, 'openCashRegister'])->name('open_cash_register.store');
-});
-
-Route::middleware(['auth', CheckPosAccess::class, CheckActiveCashSession::class])->prefix('pos')->name('pos.')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('index');
     Route::get('/sales', [PosController::class, 'salesList'])->name('sales.list');
     Route::get('/accounts-receivable', [PosController::class, 'accountsReceivable'])->name('accounts.receivable');
