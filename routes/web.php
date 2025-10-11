@@ -1,39 +1,55 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ClientController; 
 use App\Http\Controllers\ReceiptController;
-use App\Http\Controllers\PosController;
-use App\Http\Controllers\PosApiController;
-use App\Http\Middleware\CheckPosAccess;
-use App\Http\Middleware\CheckActiveCashSession; 
+use App\Http\Middleware\CheckPosAccess; 
 
-
+/*
+|--------------------------------------------------------------------------
+| Rutas Públicas (Landing Page)
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
-    return (view('welcome'));    
-});
+    return view('welcome');
+})->name('home');
 
+// Ruta para acceso denegado (cuando el middleware lo redirige)
+Route::get('/acceso-denegado', function () {
+    return view('acceso-denegado'); 
+})->name('acceso-denegado');
+
+// Ruta para imprimir recibos/pedidos (reutilizada del POS)
 Route::get('sales/{sale}/receipt', [ReceiptController::class, 'print'])->name('sales.receipt.print');
 
 
+/*
+|--------------------------------------------------------------------------
+| Portal de Clientes B2B (Rutas Protegidas)
+|--------------------------------------------------------------------------
+| Requiere autenticación y el permiso 'has_pos_access' (B2B Access Check).
+*/
 Route::middleware([
-    'auth:sanctum',
+    'auth', // CORRECCIÓN CLAVE: Usamos 'auth' en lugar de 'auth:sanctum'
     config('jetstream.auth_session'),
     'verified',
+    CheckPosAccess::class, // Tu middleware que verifica el permiso B2B
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-         //return redirect()->route('pos.index');
-    })->name('dashboard');
-});
+    
+    // Dashboard principal del cliente
+    Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
 
-Route::middleware(['auth', CheckPosAccess::class])->prefix('pos')->name('pos.')->group(function () {
-    Route::get('/', [PosController::class, 'index'])->name('index');
-    Route::get('/sales', [PosController::class, 'salesList'])->name('sales.list');
-    Route::get('/accounts-receivable', [PosController::class, 'accountsReceivable'])->name('accounts.receivable');
-    Route::get('/accounts-receivable/{client}', [PosController::class, 'clientStatement'])->name('accounts.client.statement');
-    // Nuevas rutas para el cierre
-    Route::get('/close-cash-register', [PosController::class, 'showCloseCashRegisterForm'])->name('close_cash_register.form');
-    Route::post('/close-cash-register', [PosController::class, 'closeCashRegister'])->name('close_cash_register.store');
-    Route::post('/pos/expense', [PosApiController::class, 'storeExpense'])->name('store.expense');
+    // Módulos del portal de clientes
+    Route::prefix('portal')->name('portal.')->group(function () {
+        
+        // Catálogo de Productos
+        Route::get('catalogo', [ClientController::class, 'showCatalog'])->name('catalogo');
+        
+        // Historial de Pedidos
+        Route::get('pedidos', [ClientController::class, 'showOrders'])->name('pedidos');
+        
+        // Cuentas por Cobrar
+        Route::get('cuentas-por-cobrar', [ClientController::class, 'showAccountsReceivable'])->name('cuentas-por-cobrar');
+    });
 
 });

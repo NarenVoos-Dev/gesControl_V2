@@ -27,19 +27,10 @@ class CheckBusinessLicense
             return redirect()->route("filament.{$panelId}.auth.login");
         };
 
-        if ($user->hasRole('super-admin')) {
-            return $handleLogout('Super Admin debe usar el panel de Super Admin.');
-        }
 
         if (!$user->business) {
             return $handleLogout('Usuario no asociado a un negocio.');
-        }
-
-        $business = $user->business;
-        if (!$business->is_active || ($business->license_expires_at && $business->license_expires_at < now())) {
-            return $handleLogout('Tu licencia ha expirado o ha sido desactivada.');
-        }
-        
+        }        
         return $next($request);
     }
 }

@@ -15,11 +15,22 @@ return new class extends Migration
             $table->id();
             $table->foreignId('business_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('document')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('type_document')->nullable()->comment('Tipo de documento (NIT, C.C.)');
+            $table->string('document')->unique()->nullable()->comment('Número de identificación o NIT');
+            $table->string('email')->unique()->nullable();
+            
+            // Información de Contacto
+            $table->string('phone1')->nullable()->comment('Teléfono principal');
+            $table->string('phone2')->nullable()->comment('Teléfono secundario');
             $table->string('address')->nullable();
-            $table->string('email')->nullable();
-            $table->timestamps();
+            
+            // Logística y Crédito (Mantenemos zone_id de tu migración previa)
+            $table->decimal('credit_limit', 15, 2)->default(0);
+
+            // Control de Acceso y Estado de la Solicitud
+            $table->boolean('is_active')->default(0)->comment('Estado de activación (0=Pendiente, 1=Activo)');
+            
+             $table->timestamps();
         });
     }
 

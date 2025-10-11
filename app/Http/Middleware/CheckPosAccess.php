@@ -5,40 +5,26 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Filament\Notifications\Notification; // <-- Importar la clase de Notificación
 
 class CheckPosAccess
 {
-
+    /**
+     * Verifica que el usuario autenticado tenga permiso de acceso B2B.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
 
-        // Función auxiliar para manejar el logout y la notificación de forma limpia.
-        $handleLogout = function (string $message) {
-            auth()->logout();
-
-            Notification::make()
-                ->title('Acceso Denegado')
-                ->body($message)
-                ->danger()
-                ->send(); // Esto "flashea" la notificación a la sesión para la siguiente página
-
-            // Redirigir a la página de login del panel de administración principal
-            return redirect()->route('filament.admin.auth.login');
-        };
-
-        // 1. Verificar que el usuario tenga el rol correcto.
-        if (!$user->hasAnyRole(['admin', 'vendedor'])) {
-            return $handleLogout('No tienes permiso para acceder al Punto de Venta.');
-        }
-
-        // 2. Verificar que el negocio tenga la licencia del POS activada.
+        // 1. Verificación B2B
+        // Si el usuario no tiene un negocio asignado O el acceso B2B no está activado
         if (!$user->business || !$user->business->has_pos_access) {
-            return $handleLogout('El acceso al Punto de Venta no está activado para este negocio.');
+            
+            // Redirige al cliente a la página de acceso denegado con un mensaje.
+            // Esto evita que el usuario vea un error de servidor.
+            return redirect()->route('acceso-denegado')->with('error-message', 'Tu cuenta está pendiente de aprobación. Por favor, espera la activación de un administrador.');
         }
 
-        // Si todas las verificaciones pasan, permite que la solicitud continúe a la página del POS.
+        // Si el usuario tiene acceso (está autorizado), permite la solicitud.
         return $next($request);
     }
 }

@@ -26,7 +26,7 @@ class SuperAdminPanelProvider extends PanelProvider
         return $panel
             ->id('super-admin')
             ->path('super-admin')
-            ->brandName('Control de ventas - Super Admin')
+            ->brandName('Control de pedidos - Super Admin')
             ->login()
             ->colors([
                 'primary' => Color::Amber,

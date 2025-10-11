@@ -33,16 +33,15 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->font('poppins')
-            ->brandName('Control de ventas') //Nombre de la empresa
+            ->brandName('JFProducts') //Nombre de la empresa
             ->login()
             ->colors([
-                'primary' =>  Color::hex('#635bff'),
-                'gray' => Color::hex('#37474f'),
+                'primary' =>  Color::hex('#165ed3ff'),     
             ])
             ->darkMode(false)
             //Logo principal
-            ->brandLogo(asset('img/logo.svg'))
-            ->brandLogoHeight('5rem')
+            ->brandLogo(asset('img/logoNavbar.jpg'))
+            ->brandLogoHeight('4rem')
             // favicon
             ->favicon(asset('img/favicon.svg'))
             //->sidebarFullyCollapsibleOnDesktop()

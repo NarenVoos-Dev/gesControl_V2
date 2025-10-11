@@ -1,5 +1,5 @@
-<aside class="flex flex-col w-20 bg-gradient-to-b from-blue-800 to-indigo-900 shadow-2xl border-r border-slate-700 transition-all duration-300 hover:w-64 group">
-    <!-- Logo Section -->
+<!--<aside class="flex flex-col w-20 bg-gradient-to-b from-blue-800 to-indigo-900 shadow-2xl border-r border-slate-700 transition-all duration-300 hover:w-64 group">
+    <!-Logo Section --
     <div class="flex items-center justify-center h-20 border-b border-slate-700/50 relative overflow-hidden">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
@@ -12,8 +12,14 @@
         </div>
     </div>
 
-    <!-- Navigation Links -->
+    <!- Navigation Links --
     <nav class="flex flex-col flex-grow mt-6 space-y-2 px-3">
+        <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('pos.index') ? 'active' : '' }}" title="Punto de Venta">
+            <div class="flex items-center space-x-4 p-3 rounded-xl">
+                <div class="w-6 h-6 flex-shrink-0 sidebar-icon text-gray-300"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 21v-7.5A.75.75 0 0 1 14.25 12h.5a.75.75 0 0 1 .75.75V21m-4.5 0v-7.5A.75.75 0 0 1 10.5 12h.5a.75.75 0 0 1 .75.75V21m-4.5 0V16.5a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75V21m-4.5 0V18a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75v3.75m-7.5 0V12A.75.75 0 0 1 3 11.25h.5A.75.75 0 0 1 4.25 12v9.75m-7.5 0h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm-3.75 0h.008v.008h-.008V8.25Zm-3.75 0h.008v.008h-.008V8.25Z"></path></svg></div>
+                <span class="opacity-0 group-hover:opacity-100 text-gray-300 transition-opacity duration-300 whitespace-nowrap font-medium">Dashboard</span>
+            </div>
+        </a>
         <a href="{{ route('pos.index') }}" class="sidebar-link {{ request()->routeIs('pos.index') ? 'active' : '' }}" title="Punto de Venta">
             <div class="flex items-center space-x-4 p-3 rounded-xl">
                 <div class="w-6 h-6 flex-shrink-0 sidebar-icon text-gray-300"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 21v-7.5A.75.75 0 0 1 14.25 12h.5a.75.75 0 0 1 .75.75V21m-4.5 0v-7.5A.75.75 0 0 1 10.5 12h.5a.75.75 0 0 1 .75.75V21m-4.5 0V16.5a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75V21m-4.5 0V18a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 .75.75v3.75m-7.5 0V12A.75.75 0 0 1 3 11.25h.5A.75.75 0 0 1 4.25 12v9.75m-7.5 0h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm-3.75 0h.008v.008h-.008V8.25Zm-3.75 0h.008v.008h-.008V8.25Z"></path></svg></div>
@@ -44,7 +50,7 @@
         </a>
     </nav>
 
-    <!-- Logout Button -->
+    <!- Logout Button --
     <div class="border-t border-slate-700/50 p-3 mt-auto">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
@@ -54,4 +60,76 @@
             </button>
         </form>
     </div>
-</aside>
+</aside>-->
+
+<!-- Sidebar -->
+<!-- Sidebar -->
+<div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/40 opacity-0 invisible transition-all duration-400 z-40"></div>
+
+<!-- Sidebar: W-64 compactado -->
+<nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-white/95 backdrop-blur-xl shadow-2xl -translate-x-full transition-transform duration-400 z-50 pt-24">
+    <div class="p-4 text-center border-b border-[#028dff]/10">
+        <!-- Logo/Avatar -->
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#0f4db3] to-[#028dff] flex items-center justify-center text-white font-bold text-lg mx-auto mb-3 shadow-xl shadow-[#0f4db3]/30">DR</div>
+        <div class="font-bold text-gray-900 text-base mb-0.5">Dr. María Rodríguez</div>
+        <div class="text-[#028dff] text-xs font-medium">Administrador Principal</div>
+    </div>
+    
+    <!-- Contenedor Principal de Links (para que ocupe el espacio completo) -->
+    <div class="py-4 flex flex-col h-[calc(100%-120px)] overflow-y-auto"> 
+        <div class="flex-grow space-y-1">
+            <!-- SECCIÓN PRINCIPAL -->
+            <div class="mb-4">
+                <div class="px-4 pb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Principal</div>
+                
+                <!-- Links de Navegación -->
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27,6.96 12,12.01 20.73,6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Catálogo
+                </a>
+            </div>
+            
+            <!-- SECCIÓN PEDIDOS -->
+            <div class="mb-4">
+                <div class="px-4 pb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Pedidos</div>
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Historial de Pedidos
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    Cuentas por Cobrar
+                </a>
+            </div>
+            
+            <!-- SECCIÓN HERRAMIENTAS -->
+            <div>
+                <div class="px-4 pb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Herramientas</div>
+                <a href="#" onclick="toggleCart(); return false;" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    Ver Carrito
+                </a>
+            </div>
+        </div>
+        
+        <!-- Bloque de Cerrar Sesión (Fijo en la parte inferior) -->
+        <!-- Borde superior limpio y clase 'mt-auto' removida, usando el div padre flex-col -->
+        <div class="border-t border-[#028dff]/10 p-4">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full flex items-center gap-3 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-red-500/10 hover:text-red-500" title="Cerrar Sesión">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
