@@ -11,6 +11,8 @@ use Spatie\Permission\Traits\HasRoles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use App\Models\Business;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 // CAMBIO: Se añade 'implements FilamentUser' para que el modelo sea compatible con Filament.
 class User extends Authenticatable implements FilamentUser
@@ -32,6 +34,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'business_id',
+        'client_id',   
+        'estado',  
     ];
 
     /**
@@ -92,9 +96,13 @@ class User extends Authenticatable implements FilamentUser
         }
         
         if ($panel->getId() === 'pos') {
-            return $this->hasAnyRole(['admin', 'vendedor']);
+            return $this->hasAnyRole(['admin']);
         }
 
         return true;
+    }
+     public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
     }
 }

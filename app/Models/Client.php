@@ -4,49 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Client extends Model
 {
     use HasFactory;
 
-    protected $fillable = 
-    [
+    protected $fillable = [
         'business_id',
-        'zone_id',
-        'name', 
-        'document', 
-        'phone', 
-        'address',
+        'name',
+        'type_document', // <<-- NUEVO CAMPO
+        'document',
         'email',
-        'credit_limit'
-    ];
-     protected $casts = [
-        'credit_limit' => 'decimal:2'
+        'phone1',        // <<-- NUEVO CAMPO
+        'phone2',        // <<-- NUEVO CAMPO
+        'address',
+        'credit_limit',
+        'is_active',     // <<-- NUEVO CAMPO
     ];
 
-    /**
-     * Un cliente pertenece a un negocio.
-     */
-    public function business()
+    protected $casts = [
+        'is_active' => 'boolean', // <<-- CAST A BOOLEAN
+        'credit_limit' => 'decimal:2',
+    ];
+
+    // Relaciones
+    public function business(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Business::class);
+        return $this->belongsTo(Business::class);
     }
     
-    /**
-     * Un cliente puede tener muchas ventas.
-     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
+    }
+
     public function sales()
     {
         return $this->hasMany(\App\Models\Sale::class);
     }
-
-    public function zone()
-    {
-        return $this->belongsTo(\App\Models\Zone::class);
+    public function user() {
+        return $this->hasOne(\App\Models\User::class); 
     }
+
     /**
-     * Calcula la deuda actual del cliente sumando el total de sus ventas
-     * que no están marcadas como 'Pagada'.
+     * Calcula la deuda actual del cliente sumando el total de sus ventas pendientes.
      */
     public function getCurrentDebt(): float
     {
@@ -55,7 +57,7 @@ class Client extends Model
         ->sum('pending_amount');
     }
 
-     // NUEVO MÉTODO: Verificar si puede hacer una compra a crédito
+    // Lógica para verificar si puede comprar a crédito
     public function canPurchaseOnCredit($amount)
     {
         if ($this->credit_limit <= 0) {
@@ -85,7 +87,7 @@ class Client extends Model
         }
     }
 
-    // NUEVO MÉTODO: Obtener estadísticas de crédito
+    // Obtener estadísticas de crédito (Mantenido)
     public function getCreditStats()
     {
         $currentDebt = $this->getCurrentDebt();
@@ -100,23 +102,4 @@ class Client extends Model
             'is_over_limit' => $currentDebt > $this->credit_limit
         ];
     }
-
-    // Scope para clientes con límite de crédito
-    public function scopeWithCreditLimit($query)
-    {
-        return $query->where('credit_limit', '>', 0);
-    }
-
-    // Scope para clientes que han excedido su límite
-    public function scopeOverCreditLimit($query)
-    {
-        return $query->whereHas('sales', function($subQuery) {
-            $subQuery->where('is_cash', false)
-                     ->where(function($q) {
-                         $q->where('paid', false)->orWhereNull('paid');
-                     });
-        })
-        ->whereRaw('(SELECT SUM(total) FROM sales WHERE client_id = clients.id AND is_cash = false AND (paid = false OR paid IS NULL)) > credit_limit');
-    }
-
 }

@@ -57,8 +57,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // --- CREAR ROLES ---
         $adminRole = Role::findOrCreate('admin', 'web');
-        $vendedorRole = Role::findOrCreate('vendedor', 'web');
-        $bodegueroRole = Role::findOrCreate('bodeguero', 'web');
+        $clientRole = Role::findOrCreate('cliente', 'web');
+        
+
         Role::findOrCreate('super-admin', 'web');
 
         // --- ASIGNAR PERMISOS A ROLES ---
@@ -67,24 +68,11 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminRole->givePermissionTo(Permission::all());
 
         // El Vendedor puede ver productos, gestionar clientes y crear ventas
-        $vendedorRole->givePermissionTo([
+        $clientRole->givePermissionTo([
             'product.view',
-            'client.view',
-            'client.create',
-            'client.edit',
             'sale.view',
             'sale.create',
         ]);
         
-        // El Bodeguero puede ver y gestionar productos, y gestionar compras
-        $bodegueroRole->givePermissionTo([
-            'product.view',
-            'product.create',
-            'product.edit',
-            'purchase.view',
-            'purchase.create',
-            'supplier.view',
-            'supplier.create',
-        ]);
     }
 }

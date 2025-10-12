@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('img/logoNavbar.jpg'))
             ->brandLogoHeight('4rem')
             // favicon
-            ->favicon(asset('img/favicon.svg'))
+            ->favicon(asset('img/favicon.ico'))
             //->sidebarFullyCollapsibleOnDesktop()
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

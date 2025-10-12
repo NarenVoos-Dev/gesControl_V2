@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Solamente añadimos la llave foránea para el multi-tenancy.
             // La columna 'role' ya no es necesaria.
-            $table->foreignId('business_id')
-                  ->after('id')
-                  ->nullable()
+            $table->foreignId('business_id')->after('id')->nullable()
                   ->constrained()
-                  ->onDelete('cascade');
+                  ->onDelete('set null');
+            $table->foreignId('client_id')->nullable()->after('email')->constrained('clients')->onDelete('set null');
+
+            $table->enum('estado', ['activo', 'inactivo', 'pendiente'])->default('inactivo')->after('profile_photo_path');
+
         });
     }
 
@@ -30,7 +32,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Importante tener el método down para poder revertir los cambios.
             $table->dropForeign(['business_id']);
-            $table->dropColumn('business_id');
+            $table->dropColumn('business_id','client_id', 'estado');
         });
     }
 };

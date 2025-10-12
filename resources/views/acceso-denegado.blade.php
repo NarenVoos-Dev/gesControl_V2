@@ -47,9 +47,9 @@
                 Cerrar Sesión
             </a>
             
-            <div class="mt-4 text-xs text-gray-400">
+           <!-- <div class="mt-4 text-xs text-gray-400">
                 ¿Intentas acceder como administrador? <a href="{{ route('filament.admin.auth.login') }}" class="text-blue-500 hover:underline">Ir al panel de administración.</a>
-            </div>
+            </div>-->
         </div>
     </div>
     
