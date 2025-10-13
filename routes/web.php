@@ -29,14 +29,9 @@ Route::get('/registro-exitoso', function () {
     return view('registered');
 })->name('registered')->middleware('guest');
 
-/*
-|--------------------------------------------------------------------------
-| Portal de Clientes B2B (Rutas Protegidas)
-|--------------------------------------------------------------------------
-| Requiere autenticación y el permiso 'has_pos_access' (B2B Access Check).
-*/
+
 Route::middleware([
-    'auth', // CORRECCIÓN CLAVE: Usamos 'auth' en lugar de 'auth:sanctum'
+    'auth', 
     config('jetstream.auth_session'),
     'verified',
     CheckClientAccess::class, // Tu middleware que verifica el permiso B2B
@@ -46,20 +41,24 @@ Route::middleware([
     Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('dashboard');
 
     // Módulos del portal de clientes
-    Route::prefix('pos')->name('pos.')->group(function () {
-        
-        // Catálogo de Productos
-        Route::get('/', [ClientController::class, 'index'])->name('index');
+    
+     // Catálogo de Productos
+    Route::get('/catalogo', [ClientController::class, 'catalogo'])->name('catalogo');
 
-        //web POs anterior 
-        // Route::get('/', [PosController::class, 'index'])->name('index');
-        Route::get('/sales', [ClientController::class, 'salesList'])->name('sales.list');
-        Route::get('/accounts-receivable', [ClientController::class, 'accountsReceivable'])->name('accounts.receivable');
-        Route::get('/accounts-receivable/{client}', [ClientController::class, 'clientStatement'])->name('accounts.client.statement');
-        // Nuevas rutas para el cierre
-        Route::get('/close-cash-register', [ClientController::class, 'showCloseCashRegisterForm'])->name('close_cash_register.form');
-        Route::post('/close-cash-register', [ClientController::class, 'closeCashRegister'])->name('close_cash_register.store');
-        Route::post('/pos/expense', [ClientController::class, 'storeExpense'])->name('store.expense');
-    });
+    Route::get('/productos/{product}', [ClientController::class, 'showProduct'])->name('productos.show');
+
+    // Rutas del Carrito (podría ser un nuevo controlador)
+    Route::get('/carrito', [ClientController::class, 'viewCart'])->name('carrito');
+    Route::post('/carrito/add', [ClientController::class, 'addToCart'])->name('carrito.add');
+    Route::post('/carrito/update', [ClientController::class, 'updateCart'])->name('carrito.update');
+    Route::delete('/carrito/remove', [ClientController::class, 'removeFromCart'])->name('carrito.remove');
+
+    // Rutas de Pedidos
+    Route::get('/pedidos/checkout', [ClientController::class, 'checkout'])->name('pedidos.checkout');
+    Route::post('/pedidos', [ClientController::class, 'storePedido'])->name('pedidos.store');
+    Route::get('/pedidos', [ClientController::class, 'listPedidos'])->name('pedidos.list');
+    Route::get('/pedidos/{pedido}', [ClientController::class, 'showPedido'])->name('pedidos.show');
+       
+
 
 });

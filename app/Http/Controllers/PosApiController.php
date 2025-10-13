@@ -47,18 +47,6 @@ class PosApiController extends Controller
         return response()->json($query->with('unitOfMeasure')->limit(50)->get());
 
     }
-
-    public function searchClients(Request $request)
-    {
-        $query = Client::query()->where('business_id', auth()->user()->business_id);
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->input('search') . '%')
-                  ->orWhere('document', 'like', '%' . $request->input('search') . '%');
-            });
-        }
-        return response()->json($query->limit(10)->get());
-    }
     public function storeClient(Request $request)
     {
         $validator = Validator::make($request->all(), [
