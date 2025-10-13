@@ -9,16 +9,20 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/pos/search-products', [PosApiController::class, 'searchProducts']);
-    Route::post('/pos/store-sale', [PosApiController::class, 'storeSale']);
-    Route::get('/pos/search-clients', [PosApiController::class, 'searchClients']);
-    Route::post('/pos/store-client', [PosApiController::class, 'storeClient']);
+Route::middleware(['auth', 'verified'])->prefix('api/client')->name('api.client.')->group(function ()  {
     
-    Route::get('/pos/clients/{client}/credit-details', [PosApiController::class, 'getClientCreditDetails']);
-    Route::post('/pos/store-payment', [PosApiController::class, 'storePayment']);
-    Route::get('/pos/clients/{client}/search-sales', [PosApiController::class, 'searchClientSales']);
-
-
+     // Búsqueda de productos
+    Route::get('/products', [PosApiController::class, 'searchProductsB2B'])->name('products.search');
+    
+    // Gestión del carrito
+    Route::post('/cart/add', [PosApiController::class, 'addToCartB2B'])->name('cart.add');
+    Route::get('/cart', [PosApiController::class, 'getCartB2B'])->name('cart.get');
+    Route::put('/cart/update', [PosApiController::class, 'updateCartItemB2B'])->name('cart.update');
+    Route::delete('/cart/remove', [PosApiController::class, 'removeCartItemB2B'])->name('cart.remove');
+    Route::delete('/cart/clear', [PosApiController::class, 'clearCartB2B'])->name('cart.clear');
+    
+    // Pedidos
+    Route::post('/pedidos', [PosApiController::class, 'storePedidoB2B'])->name('pedidos.store');
+    Route::get('/pedidos', [PosApiController::class, 'listPedidosB2B'])->name('pedidos.list');
 
 });

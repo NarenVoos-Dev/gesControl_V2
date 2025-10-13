@@ -10,29 +10,21 @@ use Illuminate\Support\Facades\Log;
 
 class PosApiController extends Controller
 {
-    public function searchProducts(Request $request)
+    public function searchProductsB2B(Request $request)
     {
-
-         // 1. Identificamos la sucursal de la sesión de caja activa.
-        $activeSession = CashSession::where('business_id', auth()->user()->business_id)
-                                    ->where('status', 'Abierta')
-                                    ->first();
-
-        if (!$activeSession || !$activeSession->location_id) {
-            // Si no hay caja o sucursal, devolvemos una lista vacía o productos sin stock.
-            return response()->json([]);
+        $user = auth()->user();
+        
+        // Verificar que el usuario sea un cliente B2B
+        if (!$user->client_id) {
+            return response()->json(['message' => 'Acceso no autorizado'], 403);
         }
 
-        $locationId = $activeSession->location_id;
-
         $query = Product::query()
-                ->where('products.business_id', auth()->user()->business_id)
-                ->join('inventory', function ($join) use ($locationId) {
-                    $join->on('products.id', '=', 'inventory.product_id')
-                        ->where('inventory.location_id', '=', $locationId);
-                })
-                ->select('products.*', 'inventory.stock as stock_in_location');
+            ->where('products.business_id', $user->business_id)
+            ->where('products.is_active', true) // Solo productos activos
+            ->select('products.*');
 
+        // Filtrar por categoría
         if ($request->filled('category_id')) {
             if ($request->input('category_id') === 'uncategorized') {
                 $query->whereNull('category_id');
@@ -40,13 +32,295 @@ class PosApiController extends Controller
                 $query->where('category_id', $request->input('category_id'));
             }
         }
+
+        // Búsqueda por texto
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->input('search') . '%');
         }
         
-        return response()->json($query->with('unitOfMeasure')->limit(50)->get());
+        $products = $query->with(['unitOfMeasure', 'category'])
+            ->limit(50)
+            ->get();
 
+        return response()->json($products);
     }
+    /**
+     * Agregar producto al carrito (sesión)
+     */
+    public function addToCartB2B(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|numeric|min:1',
+            'unit_of_measure_id' => 'required|exists:unit_of_measures,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $product = Product::with('unitOfMeasure')->findOrFail($request->product_id);
+        $unit = UnitOfMeasure::findOrFail($request->unit_of_measure_id);
+
+        // Obtener carrito de la sesión
+        $cart = session()->get('b2b_cart', []);
+
+        $cartKey = $request->product_id . '_' . $request->unit_of_measure_id;
+
+        if (isset($cart[$cartKey])) {
+            // Si ya existe, aumentar cantidad
+            $cart[$cartKey]['quantity'] += $request->quantity;
+        } else {
+            // Agregar nuevo item
+            $cart[$cartKey] = [
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'price' => $product->sale_price,
+                'quantity' => $request->quantity,
+                'unit_of_measure_id' => $unit->id,
+                'unit_name' => $unit->name,
+                'conversion_factor' => $unit->conversion_factor,
+                'tax_rate' => $product->tax_rate ?? 0,
+                'image' => $product->image_url ?? null,
+            ];
+        }
+
+        session()->put('b2b_cart', $cart);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto agregado al carrito',
+            'cart_count' => count($cart),
+            'cart' => $cart,
+        ]);
+    }
+    /**
+     * Obtener el carrito actual
+     */
+    public function getCartB2B()
+    {
+        $cart = session()->get('b2b_cart', []);
+        $subtotal = 0;
+        $tax = 0;
+
+        foreach ($cart as $item) {
+            $itemSubtotal = $item['price'] * $item['quantity'];
+            $subtotal += $itemSubtotal;
+            $tax += $itemSubtotal * ($item['tax_rate'] / 100);
+        }
+
+        $total = $subtotal + $tax;
+
+        return response()->json([
+            'cart' => array_values($cart), // Convertir a array indexado
+            'summary' => [
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'total' => $total,
+                'item_count' => count($cart),
+            ],
+        ]);
+    }
+    
+    /**
+     * Actualizar cantidad de un item en el carrito
+     */
+    public function updateCartItemB2B(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'cart_key' => 'required|string',
+            'quantity' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $cart = session()->get('b2b_cart', []);
+        $cartKey = $request->cart_key;
+
+        if (!isset($cart[$cartKey])) {
+            return response()->json(['message' => 'Item no encontrado'], 404);
+        }
+
+        if ($request->quantity <= 0) {
+            // Eliminar item si la cantidad es 0
+            unset($cart[$cartKey]);
+        } else {
+            $cart[$cartKey]['quantity'] = $request->quantity;
+        }
+
+        session()->put('b2b_cart', $cart);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito actualizado',
+            'cart_count' => count($cart),
+        ]);
+    }
+    /**
+     * Eliminar item del carrito
+     */
+    public function removeCartItemB2B(Request $request)
+    {
+        $cart = session()->get('b2b_cart', []);
+        $cartKey = $request->input('cart_key');
+
+        if (isset($cart[$cartKey])) {
+            unset($cart[$cartKey]);
+            session()->put('b2b_cart', $cart);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado',
+            'cart_count' => count($cart),
+        ]);
+    }
+    
+    /**
+     * Vaciar el carrito
+     */
+    public function clearCartB2B()
+    {
+        session()->forget('b2b_cart');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Carrito vaciado',
+        ]);
+    }
+
+    /**
+     * Crear pedido desde el carrito
+     */
+    public function storePedidoB2B(Request $request)
+    {
+        $user = auth()->user();
+        
+        // Verificar que sea cliente B2B
+        if (!$user->client_id) {
+            return response()->json(['message' => 'Acceso no autorizado'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'notes' => 'nullable|string|max:500',
+            'delivery_address' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $cart = session()->get('b2b_cart', []);
+
+        if (empty($cart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El carrito está vacío'
+            ], 422);
+        }
+
+        try {
+            $sale = DB::transaction(function () use ($request, $cart, $user) {
+                $subtotal = 0;
+                $tax = 0;
+
+                // Calcular totales
+                foreach ($cart as $item) {
+                    $itemSubtotal = $item['price'] * $item['quantity'];
+                    $subtotal += $itemSubtotal;
+                    $tax += $itemSubtotal * ($item['tax_rate'] / 100);
+                }
+
+                $total = $subtotal + $tax;
+
+                // Crear la venta/pedido
+                $sale = Sale::create([
+                    'business_id' => $user->business_id,
+                    'client_id' => $user->client_id,
+                    'date' => now(),
+                    'subtotal' => $subtotal,
+                    'tax' => $tax,
+                    'total' => $total,
+                    'pending_amount' => $total,
+                    'is_cash' => false, // Siempre es a crédito para B2B
+                    'status' => 'Pendiente', // Estado inicial
+                    'notes' => $request->input('notes'),
+                    'delivery_address' => $request->input('delivery_address'),
+                    'order_type' => 'b2b', // Marcar como pedido B2B
+                ]);
+
+                // Crear los items del pedido
+                foreach ($cart as $item) {
+                    $sale->items()->create([
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'unit_of_measure_id' => $item['unit_of_measure_id'],
+                        'tax_rate' => $item['tax_rate'],
+                    ]);
+                }
+
+                // Limpiar el carrito
+                session()->forget('b2b_cart');
+
+                return $sale;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => '¡Pedido creado exitosamente!',
+                'order_id' => $sale->id,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al crear pedido B2B: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el pedido: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Listar pedidos del cliente B2B
+     */
+    public function listPedidosB2B(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->client_id) {
+            return response()->json(['message' => 'Acceso no autorizado'], 403);
+        }
+
+        $query = Sale::where('client_id', $user->client_id)
+            ->where('business_id', $user->business_id)
+            ->with(['items.product', 'items.unitOfMeasure'])
+            ->orderBy('created_at', 'desc');
+
+        // Filtros opcionales
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('search')) {
+            $query->where('id', 'like', '%' . $request->input('search') . '%');
+        }
+
+        $pedidos = $query->paginate(10);
+
+        return response()->json($pedidos);
+    }
+
+
+
+
+
+
+    /******
+     * Funciones del proceso de software anterior
+     */
     public function storeClient(Request $request)
     {
         $validator = Validator::make($request->all(), [

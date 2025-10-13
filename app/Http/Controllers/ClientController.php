@@ -15,6 +15,53 @@ use Carbon\Carbon;
 
 class ClientController extends Controller
 {
+    /* public function dashboard(Request $request)
+    public function dashboard(Request $request)
+    {
+        $user = Auth::user();
+        $client = Client::find($user->client_id);
+
+        if (!$client) {
+            abort(403, 'No tienes un cliente asociado');
+        }
+
+        // --- 1. Métricas (KPIs) ---
+        $stats = [
+            'total_pendientes' => $client->sales()->where('status', 'Pendiente')->count(),
+            'total_facturados' => $client->sales()->where('status', 'Facturado')->count(),
+            'total_entregados' => $client->sales()->where('status', 'Entregado')->count(),
+            'gasto_total' => $client->sales()->sum('total'),
+        ];
+        
+        // --- 2. Gráfico de últimos 6 meses ---
+        $chartData = [
+            'labels' => [],
+            'data' => [],
+        ];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $chartData['labels'][] = $month->format('M Y');
+            $chartData['data'][] = $client->sales()
+                ->whereYear('date', $month->year)
+                ->whereMonth('date', $month->month)
+                ->sum('total');
+        }
+
+        // --- 3. Últimos pedidos ---
+        $latestOrders = $client->sales()
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+
+        return view('client.dashboard', [
+            'user' => $user,
+            'client' => $client,
+            'stats' => $stats,
+            'chartData' => $chartData,
+            'latestOrders' => $latestOrders,
+        ]);
+    }*/
     public function dashboard(Request $request)
     {
         $user = Auth::user();
@@ -55,21 +102,92 @@ class ClientController extends Controller
             'latestOrders' => $latestOrders,
         ]);
     }
-    
-    // Este método carga los datos iniciales y muestra la vista principal del POS.
+
+     /**
+     * Vista del catálogo de productos para clientes B2B
+     */
     public function catalogo()
     {
         $user = auth()->user();
+        
+        // Verificar que sea cliente B2B
+        if (!$user->client_id) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $client = Client::findOrFail($user->client_id);
         $businessId = $user->business_id;
-        // Solo pasamos los datos esenciales para la carga inicial
-        $categories = Category::where('business_id', $user->business_id)->get(['id', 'name']);
-        $hasUncategorized = Product::where('business_id', $businessId)->whereNull('category_id')->exists();
+
+        // Obtener categorías
+        $categories = Category::where('business_id', $businessId)->get(['id', 'name']);
+        
+        // Verificar si hay productos sin categoría
+        $hasUncategorized = Product::where('business_id', $businessId)
+            ->whereNull('category_id')
+            ->exists();
+            
         if ($hasUncategorized) {
             $categories->push((object)['id' => 'uncategorized', 'name' => 'Sin Categoría']);
         }
-        $units = UnitOfMeasure::where('business_id', $user->business_id)->get();
 
-        return view('pos.index', compact('categories', 'units'));
+        // Unidades de medida
+        $units = UnitOfMeasure::where('business_id', $businessId)->get();
+
+        // Contador del carrito
+        $cartCount = count(session()->get('b2b_cart', []));
+
+        return view('client.catalogo', compact('categories', 'units', 'client', 'cartCount'));
+    }
+
+    /**
+     * Vista del carrito de compras
+     */
+    public function viewCart()
+    {
+        $user = auth()->user();
+        
+        if (!$user->client_id) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $client = Client::findOrFail($user->client_id);
+        $cart = session()->get('b2b_cart', []);
+
+        return view('client.cart', compact('client', 'cart'));
+    }
+     /**
+     * Vista de listado de pedidos
+     */
+    public function listPedidos()
+    {
+        $user = auth()->user();
+        
+        if (!$user->client_id) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $client = Client::findOrFail($user->client_id);
+
+        return view('client.pedidos', compact('client'));
+    }
+
+     /**
+     * Vista de detalle de un pedido específico
+     */
+    public function showPedido($id)
+    {
+        $user = auth()->user();
+        
+        if (!$user->client_id) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $sale = Sale::where('id', $id)
+            ->where('client_id', $user->client_id)
+            ->with(['items.product', 'items.unitOfMeasure'])
+            ->firstOrFail();
+
+        return view('client.pedido-detail', compact('sale'));
     }
 
      // A partir de aquí, se agregarán los nuevos métodos para el carrito y los pedidos.

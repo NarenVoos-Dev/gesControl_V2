@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('total', 12, 2);
             $table->text('notes')->nullable();
             $table->boolean('is_cash')->default(true); // Usamos un booleano para 'Contado'. 'true' es Contado, 'false' es Crédito.
-            $table->string('status')->default('Pagada')->comment('Valores: Pagada, Pendiente, Vencida');
+            $table->string('status')->default('Pagada')->comment('Valores: Pendiente, Facturado, Entregado, Finalizado');
             $table->timestamps();
         });
 
