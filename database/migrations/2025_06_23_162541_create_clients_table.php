@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('business_id')->constrained()->onDelete('cascade');
+            $table->foreignId('business_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('type_document')->nullable()->comment('Tipo de documento (NIT, C.C.)');
             $table->string('document')->unique()->nullable()->comment('Número de identificación o NIT');

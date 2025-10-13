@@ -29,7 +29,7 @@ class CheckBusinessLicense
 
 
         if (!$user->business) {
-            return $handleLogout('Usuario no asociado a un negocio.');
+            return $handleLogout('El usuario no esta autorizado.');
         }        
         return $next($request);
     }

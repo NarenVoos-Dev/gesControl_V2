@@ -70,9 +70,19 @@
 <nav id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-white/95 backdrop-blur-xl shadow-2xl -translate-x-full transition-transform duration-400 z-50 pt-24">
     <div class="p-4 text-center border-b border-[#028dff]/10">
         <!-- Logo/Avatar -->
-        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#0f4db3] to-[#028dff] flex items-center justify-center text-white font-bold text-lg mx-auto mb-3 shadow-xl shadow-[#0f4db3]/30">DR</div>
-        <div class="font-bold text-gray-900 text-base mb-0.5">Dr. María Rodríguez</div>
-        <div class="text-[#028dff] text-xs font-medium">Administrador Principal</div>
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#0f4db3] to-[#028dff] flex items-center justify-center text-white font-bold text-lg mx-auto mb-3 shadow-xl shadow-[#0f4db3]/30">
+            {{ Str::limit(Auth::user()->name, 2, '') }}
+        </div>
+        
+        <!-- Nombre del Usuario (Persona) -->
+        <div class="font-bold text-gray-900 text-base mb-0.5">
+            {{ Auth::user()->name }}
+        </div>
+        
+        <!-- Razón Social o Rol (Usaremos el nombre del cliente si está disponible)
+        <div class="text-[#028dff] text-xs font-medium">
+            {{ Auth::user()->client->name ?? 'Usuario de Portal' }}
+        </div> -->
     </div>
     
     <!-- Contenedor Principal de Links (para que ocupe el espacio completo) -->
@@ -102,7 +112,7 @@
                 </a>
                 <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-600 transition-all duration-300 text-sm font-medium hover:bg-[#0f4db3]/5 hover:text-[#0f4db3] hover:translate-x-1">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                    Cuentas por Cobrar
+                    Cuentas por Pagar
                 </a>
             </div>
             

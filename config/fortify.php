@@ -156,4 +156,11 @@ return [
         ]),
     ],
 
+    'actions' => [
+        // CAMBIO CLAVE: Reemplazamos la acción por defecto con la tuya
+        \Laravel\Fortify\Contracts\CreatesNewUsers::class => \App\Actions\Fortify\CreateNewClient::class,
+        
+        // ... otras acciones de Fortify ...
+    ],
+
 ];

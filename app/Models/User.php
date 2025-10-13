@@ -35,7 +35,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'business_id',
         'client_id',   
-        'estado',  
+        'estado',
+        'profile_photo_path'  
     ];
 
     /**
