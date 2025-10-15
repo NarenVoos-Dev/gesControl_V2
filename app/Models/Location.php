@@ -16,10 +16,12 @@ class Location extends Model
         'name',
         'is_primary',
         'address',
+        'is_b2b_warehouse',
     ];
 
     protected $casts = [
         'is_primary' => 'boolean',
+        'is_b2b_warehouse' => 'boolean',
     ];
 
     /**

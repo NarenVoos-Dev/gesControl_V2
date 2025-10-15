@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('business_id')->constrained();
             $table->string('name');
             $table->boolean('is_primary')->default(false)->comment('Identifica la bodega principal');
+            $table->boolean('is_b2b_warehouse')->default(false)->comment('Activa la bodega en la que se conectara el sistema de pedidos');
             $table->text('address')->nullable();
             $table->timestamps();
         });

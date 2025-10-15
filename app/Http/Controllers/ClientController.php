@@ -94,7 +94,7 @@ class ClientController extends Controller
             (object)['id' => 103, 'date' => Carbon::parse('2024-01-22'), 'total' => 67500, 'status' => 'Pendiente'],
         ]);
 
-        return view('client.dashboard', [
+        return view('dashboard', [
             'user' => $user,
             'client' => $client,
             'stats' => $stats,

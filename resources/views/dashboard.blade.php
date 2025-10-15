@@ -18,21 +18,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             
             <!-- Tarjeta: Catálogo -->
-            <a href="{{ route('portal.catalogo') }}" class="bg-[#028dff] hover:bg-[#0f4db3] transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
+            <a href="{{ route('catalogo') }}" class="bg-[#028dff] hover:bg-[#0f4db3] transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
                 <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M12 15h.01"/></svg>
                 <span class="font-semibold text-lg">Catálogo y Pedidos</span>
                 <p class="text-sm opacity-80">Inventario actualizado en tiempo real.</p>
             </a>
 
             <!-- Tarjeta: Pedidos -->
-            <a href="{{ route('portal.pedidos') }}" class="bg-[#0f4db3] hover:bg-[#0c3e90] transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
+            <a href="#" class="bg-[#0f4db3] hover:bg-[#0c3e90] transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
                 <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 <span class="font-semibold text-lg">Historial de Órdenes</span>
                 <p class="text-sm opacity-80">Revisa el estado de tus pedidos.</p>
             </a>
 
             <!-- Tarjeta: Cuentas por Cobrar -->
-            <a href="{{ route('portal.cuentas-por-cobrar') }}" class="bg-gray-700 hover:bg-gray-800 transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
+            <a href="#" class="bg-gray-700 hover:bg-gray-800 transition duration-300 rounded-xl p-5 text-white text-center shadow-lg transform hover:scale-[1.02]">
                 <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
                 <span class="font-semibold text-lg">Cuentas por Pagar</span>
                 <p class="text-sm opacity-80">Facturas, abonos y créditos.</p>
@@ -175,7 +175,7 @@
                 </table>
             </div>
             <div class="mt-4">
-                <a href="{{ route('portal.pedidos') }}" class="text-[#028dff] hover:text-[#0f4db3] text-sm font-medium">Ver todos los pedidos →</a>
+                <a href="#" class="text-[#028dff] hover:text-[#0f4db3] text-sm font-medium">Ver todos los pedidos →</a>
             </div>
         </div>
         
