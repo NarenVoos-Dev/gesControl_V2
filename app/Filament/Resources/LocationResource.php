@@ -43,6 +43,9 @@ class LocationResource extends Resource
                 Forms\Components\Toggle::make('is_primary')
                     ->label('¿Es la bodega principal?')
                     ->helperText('Marca esta opción si es tu almacén o bodega central.'),
+                 Forms\Components\Toggle::make('is_b2b_warehouse')
+                    ->label('¿Usar para Catálogo B2B?')
+                    ->helperText('Activa esta opción para que el inventario del catálogo se tome de esta bodega.'),
             ]);
     }
 
@@ -58,6 +61,11 @@ class LocationResource extends Resource
                     ->label('Principal')
                     ->boolean(),
                 
+                Tables\Columns\IconColumn::make('is_b2b_warehouse')
+                ->label('Catalogo b2b')
+                ->boolean(),
+
+                
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha de Creación')
                     ->dateTime('d/m/Y')
@@ -69,6 +77,7 @@ class LocationResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -88,8 +97,8 @@ class LocationResource extends Resource
     {
         return [
             'index' => Pages\ListLocations::route('/'),
-            //'create' => Pages\CreateLocation::route('/create'),
-            //'edit' => Pages\EditLocation::route('/{record}/edit'),
+            'create' => Pages\CreateLocation::route('/create'),
+            'edit' => Pages\EditLocation::route('/{record}/edit'),
         ];
     }
 }

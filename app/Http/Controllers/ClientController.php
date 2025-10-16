@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\Client;
@@ -10,8 +11,9 @@ use App\Models\UnitOfMeasure;
 use App\Models\Sale;
 use App\Models\Zone;
 use App\Models\Product;
-use App\Models\{CashSession, CashSessionTransaction,Location};
+use App\Models\{CashSession, CashSessionTransaction,Location, Business};
 use Carbon\Carbon;
+
 
 class ClientController extends Controller
 {
@@ -108,35 +110,74 @@ class ClientController extends Controller
      */
     public function catalogo()
     {
-        $user = auth()->user();
+        Log::info('=== Inicio de catalogo() ===');
         
-        // Verificar que sea cliente B2B
+        $user = auth()->user();
+        Log::info('Usuario autenticado', ['user_id' => $user->id, 'client_id' => $user->client_id]);
+        
         if (!$user->client_id) {
+            Log::warning('Acceso denegado: usuario sin client_id', ['user_id' => $user->id]);
             abort(403, 'Acceso no autorizado');
         }
 
-        $client = Client::findOrFail($user->client_id);
-        $businessId = $user->business_id;
+        $client = \App\Models\Client::findOrFail($user->client_id);
+        Log::info('Cliente encontrado', ['client_id' => $client->id, 'client_name' => $client->name ?? 'N/A']);
 
-        // Obtener categorías
-        $categories = Category::where('business_id', $businessId)->get(['id', 'name']);
+        // 1. Buscamos la bodega designada para el catálogo B2B
+        $b2bLocation = Location::where('is_b2b_warehouse', true)->first();
         
-        // Verificar si hay productos sin categoría
-        $hasUncategorized = Product::where('business_id', $businessId)
-            ->whereNull('category_id')
-            ->exists();
-            
-        if ($hasUncategorized) {
-            $categories->push((object)['id' => 'uncategorized', 'name' => 'Sin Categoría']);
+        if ($b2bLocation) {
+            Log::info('Bodega B2B encontrada', [
+                'location_id' => $b2bLocation->id,
+                'location_name' => $b2bLocation->name ?? 'N/A'
+            ]);
+        } else {
+            Log::warning('No se encontró bodega B2B configurada');
         }
-
-        // Unidades de medida
-        $units = UnitOfMeasure::where('business_id', $businessId)->get();
-
-        // Contador del carrito
+        
+        $products = [];
+        if ($b2bLocation) {
+            // 2. Si hay una bodega, cargamos los productos y su stock de esa bodega
+            $products = Product::query()
+                ->join('inventory', function ($join) use ($b2bLocation) {
+                    $join->on('products.id', '=', 'inventory.product_id')
+                        ->where('inventory.location_id', '=', $b2bLocation->id);
+                })
+                ->select('products.*', 'inventory.stock as stock_in_location','inventory.stock_minimo as stock_minimo')
+                ->with('unitOfMeasure')
+                ->get();
+                
+            Log::info('Productos cargados desde bodega B2B', [
+                'total_productos' => $products->count(),
+                'location_id' => $b2bLocation->id
+            ]);
+            
+            // Log detallado de productos (opcional, comentar en producción)
+            if ($products->isEmpty()) {
+                Log::warning('No se encontraron productos en la bodega B2B');
+            } else {
+                Log::debug('Primeros 5 productos', [
+                    'productos' => $products->take(5)->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'name' => $p->name ?? 'N/A',
+                            'stock' => $p->stock_in_location ?? 0
+                        ];
+                    })
+                ]);
+            }
+        }
+        
+        // Categorías sin filtro de business_id
+        $categories = Category::get(['id', 'name']);
+        Log::info('Categorías cargadas', ['total_categorias' => $categories->count()]);
+        
         $cartCount = count(session()->get('b2b_cart', []));
-
-        return view('client.catalogo', compact('categories', 'units', 'client', 'cartCount'));
+        Log::info('Carrito B2B', ['items_count' => $cartCount]);
+        
+        Log::info('=== Fin de catalogo() - Retornando vista ===');
+        
+        return view('client.catalogo', compact('categories', 'client', 'cartCount', 'products'));
     }
 
     /**

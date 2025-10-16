@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-use App\Models\{Product, Sale, StockMovement, UnitOfMeasure, Client, Category, Payment, CashSessionTransaction, CashSession, Egress,Inventory};
+use App\Models\{Product, Sale, StockMovement, UnitOfMeasure, Client, Category,Inventory, Location};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -12,36 +12,89 @@ class PosApiController extends Controller
 {
     public function searchProductsB2B(Request $request)
     {
-        $user = auth()->user();
+        Log::info('=== Inicio searchProductsB2B ===', [
+            'request_data' => $request->all()
+        ]);
         
-        // Verificar que el usuario sea un cliente B2B
+        $user = auth()->user();
+        Log::info('Usuario autenticado', [
+            'user_id' => $user->id,
+            'client_id' => $user->client_id,
+            'business_id' => $user->business_id ?? 'N/A'
+        ]);
+        
         if (!$user->client_id) {
+            Log::warning('Acceso denegado: usuario sin client_id', ['user_id' => $user->id]);
             return response()->json(['message' => 'Acceso no autorizado'], 403);
         }
 
-        $query = Product::query()
-            ->where('products.business_id', $user->business_id)
-            ->where('products.is_active', true) // Solo productos activos
-            ->select('products.*');
-
-        // Filtrar por categoría
-        if ($request->filled('category_id')) {
-            if ($request->input('category_id') === 'uncategorized') {
-                $query->whereNull('category_id');
-            } else {
-                $query->where('category_id', $request->input('category_id'));
-            }
-        }
-
-        // Búsqueda por texto
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->input('search') . '%');
+        // 1. Buscamos la bodega que tiene el toggle activado para B2B
+        $b2bLocation = Location::where('is_b2b_warehouse', true)->first();
+        
+        if (!$b2bLocation) {
+            Log::error('Bodega B2B no configurada');
+            return response()->json(['message' => 'El catálogo no está configurado por el administrador.'], 404);
         }
         
-        $products = $query->with(['unitOfMeasure', 'category'])
-            ->limit(50)
-            ->get();
+        Log::info('Bodega B2B encontrada', [
+            'location_id' => $b2bLocation->id,
+            'location_name' => $b2bLocation->name ?? 'N/A'
+        ]);
+        
+        $locationId = $b2bLocation->id;
+        
+        // 2. La consulta ahora une con el inventario de la bodega correcta
+        $query = Product::query()
+            ->where('products.is_active', true)
+            ->join('inventory', function ($join) use ($locationId) {
+                $join->on('products.id', '=', 'inventory.product_id')
+                    ->where('inventory.location_id', '=', $locationId);
+            })
+            ->select('products.*', 'inventory.stock as stock_in_location', 'inventory.stock_minimo');
+        
+        Log::info('Query base construida', ['location_id' => $locationId]);
 
+        // Filtro por categoría
+        if ($request->filled('category_id')) {
+            $categoryId = $request->input('category_id');
+            $query->where('products.category_id', $categoryId);
+            Log::info('Filtro por categoría aplicado', ['category_id' => $categoryId]);
+        }
+        
+        // Filtro por búsqueda
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where('products.name', 'like', '%' . $searchTerm . '%');
+            Log::info('Filtro de búsqueda aplicado', ['search_term' => $searchTerm]);
+        }
+        
+        // Ejecutar consulta
+        $products = $query->with(['unitOfMeasure', 'category'])->get();
+        
+        Log::info('Productos obtenidos', [
+            'total_productos' => $products->count()
+        ]);
+        
+        // Log de primeros productos (opcional, comentar en producción)
+        if ($products->isEmpty()) {
+            Log::warning('No se encontraron productos con los filtros aplicados', [
+                'filtros' => $request->all()
+            ]);
+        } else {
+            Log::debug('Muestra de productos encontrados', [
+                'primeros_3' => $products->take(3)->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'name' => $p->name ?? 'N/A',
+                        'stock' => $p->stock_in_location ?? 0,
+                        'price' => $p->price ?? 0
+                    ];
+                })
+            ]);
+        }
+        
+        Log::info('=== Fin searchProductsB2B - Retornando JSON ===');
+        
         return response()->json($products);
     }
     /**

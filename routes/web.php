@@ -58,6 +58,19 @@ Route::middleware([
     Route::post('/pedidos', [ClientController::class, 'storePedido'])->name('pedidos.store');
     Route::get('/pedidos', [ClientController::class, 'listPedidos'])->name('pedidos.list');
     Route::get('/pedidos/{pedido}', [ClientController::class, 'showPedido'])->name('pedidos.show');
+
+    // --- API interna para el Portal de Clientes (protegida por sesión) ---
+    Route::prefix('/api/b2b')->name('api.b2b.')->group(function() {
+        //Productos
+        Route::get('/products', [PosApiController::class, 'searchProductsB2B'])->name('products.search');
+        //Carrito de compras  ============================================================================
+        Route::post('/cart/add', [PosApiController::class, 'addToCartB2B'])->name('cart.add');
+        Route::get('/cart', [PosApiController::class, 'getCartB2B'])->name('cart.get');
+        Route::put('/cart/update', [PosApiController::class, 'updateCartItemB2B'])->name('cart.update');
+        Route::delete('/cart/remove', [PosApiController::class, 'removeCartItemB2B'])->name('cart.remove');
+        //Pedidos ============================================================================================
+        Route::post('/pedidos', [PosApiController::class, 'storePedidoB2B'])->name('orders.store');
+    });
        
 
 
